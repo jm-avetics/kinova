@@ -1,0 +1,36 @@
+% Input: 
+%   nSamplePaths: the number of sample paths 
+%   sigma： sample covariance matrix
+%   theta: mean trajectory from last iteration
+% Output:
+%   theta_paths: sampled trajectories
+%   em: sampled Gaussian trajectory for each joint
+
+function [theta_paths, em]=stompSamples(nSamplePaths,sigma,theta)
+% Sample theta (joints angles) trajectory 
+
+[nJoints, nDiscretize] = size(theta);
+
+em = cell(1,nJoints);
+ek = cell(1,nSamplePaths);
+
+theta_paths = cell(1, nSamplePaths);
+mu=zeros(1,length(sigma));
+sigma = cell2mat(sigma);
+
+%% TODO: complete code of independent sampling for each joint
+for m = 1 : nJoints
+    % Each joint is sampled independently.
+    % The starting q0 and final qT are fixed, so set the sample to 0.
+    em{m} = zeros(nSamplePaths, nDiscretize);
+    % Sample from multivariable Gaussian distribution
+    em{m}(:, 2:end-1) = mvnrnd(mu, diag(cell2mat(sigma)), nSamplePaths);
+end
+
+
+%% Regroup it by samples
+emk = [em{:}];
+for k=1:nSamplePaths
+    ek{k} = reshape(emk(k,:),nDiscretize, nJoints)'; % reshape each row of emk into a nJoints by nDiscretize matrix
+    theta_paths{k} = theta + ek{k}; % add the sample to the mean trajectory
+end
